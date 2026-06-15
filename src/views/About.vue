@@ -1,6 +1,18 @@
 <template>
-  <div class="about-page">
-    <div class="container">
+  <div class="about-page" :class="{ 'has-bg': hoveredSpot }">
+    <!-- Dynamic Background -->
+    <transition name="bg-fade">
+      <div v-if="hoveredSpot" class="page-dynamic-bg" :key="hoveredSpot.name">
+        <img :src="hoveredSpot.image" alt="" class="bg-img" />
+        <div class="bg-overlay"></div>
+        <div class="bg-info">
+          <h3 class="bg-spot-name">{{ hoveredSpot.name }}</h3>
+          <p class="bg-spot-desc">{{ hoveredSpot.desc }}</p>
+        </div>
+      </div>
+    </transition>
+
+    <div class="container page-content">
       <!-- Profile Section -->
       <section class="profile-section">
         <div class="profile-card">
@@ -42,25 +54,24 @@
       <!-- Skills Section -->
       <section class="skills-section">
         <h2 class="section-title">技能专长</h2>
-        <div class="skills-grid">
-          <div
-            v-for="(skill, index) in groupedSkills"
-            :key="skill.category"
-            class="skill-category"
-            :style="{ animationDelay: `${index * 0.1}s` }"
-          >
-            <h3 class="category-title">{{ skill.category }}</h3>
-            <div class="skill-list">
-              <div v-for="item in skill.skills" :key="item.name" class="skill-item">
-                <div class="skill-header">
-                  <span class="skill-name">{{ item.name }}</span>
-                  <span class="skill-level">{{ item.level }}%</span>
-                </div>
-                <div class="skill-bar">
-                  <div class="skill-progress" :style="{ width: `${item.level}%` }"></div>
-                </div>
-              </div>
-            </div>
+        <div class="skills-card">
+          <div class="skill-items">
+            <a
+              v-for="item in profile.skills"
+              :key="item.name"
+              :href="item.url || '#'"
+              :target="item.url ? '_blank' : undefined"
+              class="skill-tag"
+              :title="item.name"
+            >
+              <img
+                :src="`https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/${item.icon}/${item.icon}-original.svg`"
+                :alt="item.name"
+                class="skill-icon"
+                @error="onIconError"
+              />
+              <span class="skill-tag-name">{{ item.name }}</span>
+            </a>
           </div>
         </div>
       </section>
@@ -94,41 +105,230 @@
           </div>
         </div>
       </section>
+
+      <!-- Guangxi Travel Section -->
+      <section class="travel-section">
+        <div class="travel-header">
+          <h2 class="section-title">广西风光</h2>
+          <button class="recommend-btn" @click="showRecommendModal = true">
+            <Plus :size="16" />
+            推荐景点
+          </button>
+        </div>
+        <div class="travel-marquee">
+          <div class="marquee-track" :class="{ paused: isPaused }">
+            <div
+              v-for="(spot, i) in [...guangxiSpots, ...guangxiSpots]"
+              :key="i"
+              class="travel-card"
+              @mouseenter="onCardHover(spot)"
+              @mouseleave="onCardLeave"
+            >
+              <img :src="spot.image" :alt="spot.name" class="travel-img" />
+              <div class="travel-overlay">
+                <h4 class="travel-name">{{ spot.name }}</h4>
+                <p class="travel-desc">{{ spot.desc }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
+
+    <!-- Recommend Modal -->
+    <a-modal
+      v-model:open="showRecommendModal"
+      title="推荐广西景点"
+      :okText="'提交审核'"
+      :cancelText="'取消'"
+      @ok="submitRecommend"
+      :okButtonProps="{ disabled: !recommendForm.name || !recommendForm.desc }"
+    >
+      <div class="recommend-form">
+        <div class="form-item">
+          <label>景点名称 <span class="required">*</span></label>
+          <a-input v-model:value="recommendForm.name" placeholder="如：桂林山水" />
+        </div>
+        <div class="form-item">
+          <label>景点描述 <span class="required">*</span></label>
+          <a-textarea v-model:value="recommendForm.desc" placeholder="简短描述该景点的特色" :rows="3" />
+        </div>
+        <div class="form-item">
+          <label>景点图片</label>
+          <a-input v-model:value="recommendForm.image" placeholder="图片URL（可选）" />
+        </div>
+        <div class="form-item">
+          <label>推荐人</label>
+          <a-input v-model:value="recommendForm.author" placeholder="您的昵称（可选）" />
+        </div>
+        <div class="form-tip">
+          <Info :size="14" />
+          提交后将由站主审核后展示
+        </div>
+      </div>
+    </a-modal>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { MapPin, Github, Twitter, Linkedin, Mail, Send } from 'lucide-vue-next'
+import { computed, ref } from 'vue'
+import { MapPin, Github, Twitter, Linkedin, Mail, Send, Plus, Info } from 'lucide-vue-next'
 import { useBlogStore } from '@/store'
 import myAvatar from '@/assets/my.jpg'
 
 const blogStore = useBlogStore()
-
 const profile = computed(() => blogStore.profileData)
-
-const groupedSkills = computed(() => {
-  const groups: Record<string, { name: string; level: number }[]> = {}
-
-  profile.value.skills.forEach(skill => {
-    if (!groups[skill.category]) {
-      groups[skill.category] = []
-    }
-    groups[skill.category].push({ name: skill.name, level: skill.level })
-  })
-
-  return Object.entries(groups).map(([category, skills]) => ({
-    category,
-    skills
-  }))
+const isPaused = ref(false)
+const hoveredSpot = ref<{ name: string; desc: string; image: string } | null>(null)
+const showRecommendModal = ref(false)
+const recommendForm = ref({
+  name: '',
+  desc: '',
+  image: '',
+  author: ''
 })
+
+let hoverTimer: ReturnType<typeof setTimeout> | null = null
+
+const onCardHover = (spot: { name: string; desc: string; image: string }) => {
+  isPaused.value = true
+  hoverTimer = setTimeout(() => {
+    hoveredSpot.value = spot
+  }, 300)
+}
+
+const onCardLeave = () => {
+  isPaused.value = false
+  hoveredSpot.value = null
+  if (hoverTimer) {
+    clearTimeout(hoverTimer)
+    hoverTimer = null
+  }
+}
+
+const submitRecommend = () => {
+  // 前端模拟提交，实际项目中应调用后端API
+  const pending = JSON.parse(localStorage.getItem('guangxi_pending') || '[]')
+  pending.push({
+    ...recommendForm.value,
+    status: 'pending',
+    createdAt: new Date().toISOString()
+  })
+  localStorage.setItem('guangxi_pending', JSON.stringify(pending))
+  recommendForm.value = { name: '', desc: '', image: '', author: '' }
+  showRecommendModal.value = false
+}
+
+const onIconError = (e: Event) => {
+  const img = e.target as HTMLImageElement
+  const src = img.src.replace('-original.svg', '-plain.svg')
+  if (img.src !== src) {
+    img.src = src
+  } else {
+    img.style.display = 'none'
+  }
+}
+
+const guangxiSpots = [
+  { name: '桂林山水', desc: '山水甲天下', image: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Guilin%20karst%20mountains%20Li%20River%20misty%20landscape%20China%20photography&image_size=landscape_16_9' },
+  { name: '阳朔西街', desc: '千年古街风情', image: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Yangshuo%20West%20Street%20night%20lanterns%20ancient%20town%20Guangxi%20China&image_size=landscape_16_9' },
+  { name: '龙脊梯田', desc: '大地艺术奇观', image: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Longji%20rice%20terraces%20golden%20layers%20mountains%20Guangxi%20China%20aerial%20view&image_size=landscape_16_9' },
+  { name: '德天瀑布', desc: '亚洲第一跨国瀑布', image: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Detian%20waterfall%20cascading%20water%20lush%20green%20Guangxi%20border%20China&image_size=landscape_16_9' },
+  { name: '北海银滩', desc: '天下第一滩', image: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Beihai%20Silver%20Beach%20white%20sand%20blue%20sea%20tropical%20Guangxi%20China&image_size=landscape_16_9' },
+  { name: '黄姚古镇', desc: '千年古镇梦境', image: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Huangyao%20ancient%20town%20stone%20bridge%20river%20traditional%20buildings%20Guangxi&image_size=landscape_16_9' },
+  { name: '漓江风光', desc: '百里画廊', image: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Li%20River%20bamboo%20raft%20karst%20peaks%20reflection%20water%20Guilin%20China&image_size=landscape_16_9' },
+  { name: '涠洲岛', desc: '中国最年轻火山岛', image: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Weizhou%20Island%20volcanic%20rock%20cliff%20ocean%20tropical%20Beihai%20Guangxi&image_size=landscape_16_9' },
+  { name: '象鼻山', desc: '桂林城徽标志', image: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Elephant%20Trunk%20Hill%20Xiangbishan%20Guilin%20river%20reflection%20sunset%20China&image_size=landscape_16_9' },
+  { name: '遇龙河', desc: '小家碧玉般清幽', image: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Yulong%20River%20bamboo%20rafting%20peaceful%20countryside%20karst%20Yangshuo%20Guangxi&image_size=landscape_16_9' },
+]
 </script>
 
 <style scoped>
 .about-page {
+  position: relative;
   padding: 48px 0 80px;
   min-height: calc(100vh - 64px);
+  overflow: hidden;
+}
+
+/* Dynamic Background */
+.page-dynamic-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.bg-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: blur(8px) brightness(0.4);
+  transform: scale(1.05);
+}
+
+.bg-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.bg-info {
+  position: absolute;
+  bottom: 80px;
+  left: 80px;
+  color: white;
+  z-index: 1;
+}
+
+.bg-spot-name {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+}
+
+.bg-spot-desc {
+  font-size: 1.125rem;
+  opacity: 0.9;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+}
+
+.bg-fade-enter-active,
+.bg-fade-leave-active {
+  transition: opacity 0.6s ease;
+}
+
+.bg-fade-enter-from,
+.bg-fade-leave-to {
+  opacity: 0;
+}
+
+/* Page content layer */
+.page-content {
+  position: relative;
+  z-index: 1;
+}
+
+/* When background is active, make cards more opaque */
+.about-page.has-bg .profile-card,
+.about-page.has-bg .skills-card,
+.about-page.has-bg .contact-card {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+}
+
+.about-page.has-bg .section-title {
+  color: white;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.3);
+}
+
+.about-page.has-bg .skill-tag {
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.about-page.has-bg .travel-header .section-title {
+  color: white;
 }
 
 /* Profile Section */
@@ -143,6 +343,7 @@ const groupedSkills = computed(() => {
   background: var(--bg-secondary);
   border-radius: var(--radius-xl);
   align-items: center;
+  transition: background 0.4s ease, backdrop-filter 0.4s ease;
 }
 
 .profile-avatar-wrapper {
@@ -232,68 +433,52 @@ const groupedSkills = computed(() => {
   font-size: 1.75rem;
   font-weight: 600;
   margin-bottom: 32px;
+  transition: color 0.4s ease;
 }
 
-.skills-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 24px;
-}
-
-.skill-category {
-  padding: 24px;
+.skills-card {
+  padding: 28px;
   background: var(--bg-secondary);
   border-radius: var(--radius-xl);
+  transition: background 0.4s ease, backdrop-filter 0.4s ease;
 }
 
-.category-title {
-  font-family: var(--font-body);
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--primary-color);
-  margin-bottom: 20px;
-}
-
-.skill-list {
+.skill-items {
   display: flex;
-  flex-direction: column;
-  gap: 16px;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
-.skill-item {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.skill-header {
-  display: flex;
-  justify-content: space-between;
+.skill-tag {
+  display: inline-flex;
   align-items: center;
-}
-
-.skill-name {
-  font-size: 0.9375rem;
+  gap: 8px;
+  padding: 8px 14px;
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
   color: var(--text-primary);
-}
-
-.skill-level {
   font-size: 0.8125rem;
-  color: var(--text-tertiary);
+  font-weight: 500;
+  text-decoration: none;
+  transition: all var(--transition-fast);
+  border: 1px solid transparent;
 }
 
-.skill-bar {
-  height: 6px;
-  background: var(--bg-tertiary);
-  border-radius: var(--radius-full);
-  overflow: hidden;
+.skill-tag:hover {
+  border-color: var(--primary-color);
+  background: rgba(59, 130, 246, 0.06);
+  transform: translateY(-1px);
+  color: var(--primary-color);
 }
 
-.skill-progress {
-  height: 100%;
-  background: var(--primary-gradient);
-  border-radius: var(--radius-full);
-  transition: width 1s ease;
+.skill-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+.skill-tag-name {
+  white-space: nowrap;
 }
 
 /* Contact Section */
@@ -308,6 +493,7 @@ const groupedSkills = computed(() => {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 48px;
+  transition: background 0.4s ease, backdrop-filter 0.4s ease;
 }
 
 .contact-info {
@@ -375,6 +561,153 @@ const groupedSkills = computed(() => {
   color: white;
 }
 
+/* Guangxi Travel Section */
+.travel-section {
+  margin-bottom: 64px;
+}
+
+.travel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 32px;
+}
+
+.travel-header .section-title {
+  margin-bottom: 0;
+}
+
+.recommend-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  background: var(--primary-gradient);
+  color: white;
+  border: none;
+  border-radius: var(--radius-lg);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.recommend-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35);
+}
+
+.travel-marquee {
+  overflow: hidden;
+  border-radius: var(--radius-xl);
+}
+
+.marquee-track {
+  display: flex;
+  gap: 20px;
+  width: max-content;
+  animation: marquee-scroll 80s linear infinite;
+}
+
+.marquee-track.paused {
+  animation-play-state: paused;
+}
+
+@keyframes marquee-scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.travel-card {
+  position: relative;
+  flex-shrink: 0;
+  width: 300px;
+  height: 200px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.travel-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.travel-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.travel-card:hover .travel-img {
+  transform: scale(1.08);
+}
+
+.travel-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 16px;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+  color: white;
+}
+
+.travel-name {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: white;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}
+
+.travel-desc {
+  font-size: 0.75rem;
+  opacity: 0.85;
+  color: white;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+/* Recommend Modal */
+.recommend-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-item label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.required {
+  color: #f56c6c;
+}
+
+.form-tip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8125rem;
+  color: var(--text-tertiary);
+  padding: 8px 12px;
+  background: rgba(59, 130, 246, 0.06);
+  border-radius: var(--radius-lg);
+}
+
 @media (max-width: 1024px) {
   .profile-card {
     flex-direction: column;
@@ -383,10 +716,6 @@ const groupedSkills = computed(() => {
 
   .social-links {
     justify-content: center;
-  }
-
-  .skills-grid {
-    grid-template-columns: 1fr;
   }
 
   .contact-card {
@@ -399,6 +728,15 @@ const groupedSkills = computed(() => {
     border-left: none;
     border-top: 1px solid var(--border-color);
   }
+
+  .bg-info {
+    left: 24px;
+    bottom: 40px;
+  }
+
+  .bg-spot-name {
+    font-size: 1.75rem;
+  }
 }
 
 @media (max-width: 768px) {
@@ -409,6 +747,20 @@ const groupedSkills = computed(() => {
   .profile-avatar {
     width: 150px;
     height: 150px;
+  }
+
+  .travel-card {
+    width: 240px;
+    height: 160px;
+  }
+
+  .bg-spot-name {
+    font-size: 1.5rem;
+  }
+
+  .bg-info {
+    left: 16px;
+    bottom: 24px;
   }
 }
 </style>

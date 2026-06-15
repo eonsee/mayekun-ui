@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
 
 :root {
-  /* 主色调 - 简洁蓝色 */
+  /* 主色调 - 默认蓝色（由 data-season 覆盖） */
   --primary-color: #3b82f6;
   --primary-gradient: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   --secondary-color: #2563eb;
@@ -69,6 +69,54 @@
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
   --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
+}
+
+/* 春季主题 - 嫩绿生机 */
+[data-season='spring'] {
+  --primary-color: #22c55e;
+  --primary-gradient: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  --secondary-color: #16a34a;
+}
+[data-theme='dark'][data-season='spring'] {
+  --primary-color: #4ade80;
+  --primary-gradient: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+  --secondary-color: #22c55e;
+}
+
+/* 夏季主题 - 清凉青蓝 */
+[data-season='summer'] {
+  --primary-color: #06b6d4;
+  --primary-gradient: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+  --secondary-color: #0891b2;
+}
+[data-theme='dark'][data-season='summer'] {
+  --primary-color: #22d3ee;
+  --primary-gradient: linear-gradient(135deg, #22d3ee 0%, #06b6d4 100%);
+  --secondary-color: #06b6d4;
+}
+
+/* 秋季主题 - 暖橙金 */
+[data-season='autumn'] {
+  --primary-color: #f97316;
+  --primary-gradient: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  --secondary-color: #ea580c;
+}
+[data-theme='dark'][data-season='autumn'] {
+  --primary-color: #fb923c;
+  --primary-gradient: linear-gradient(135deg, #fb923c 0%, #f97316 100%);
+  --secondary-color: #f97316;
+}
+
+/* 冬季主题 - 静谧蓝紫 */
+[data-season='winter'] {
+  --primary-color: #6366f1;
+  --primary-gradient: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  --secondary-color: #4f46e5;
+}
+[data-theme='dark'][data-season='winter'] {
+  --primary-color: #818cf8;
+  --primary-gradient: linear-gradient(135deg, #818cf8 0%, #6366f1 100%);
+  --secondary-color: #6366f1;
 }
 
 * {

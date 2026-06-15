@@ -44,7 +44,7 @@ defineProps<{
   display: flex;
   flex-direction: column;
   background: var(--bg-primary);
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-lg);
   overflow: hidden;
   border: 1px solid var(--border-color);
   transition: all var(--transition-normal);
@@ -58,7 +58,7 @@ defineProps<{
 
 .card-image {
   position: relative;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 16 / 10;
   overflow: hidden;
 }
 
@@ -75,27 +75,27 @@ defineProps<{
 
 .card-category {
   position: absolute;
-  top: 12px;
-  left: 12px;
-  padding: 4px 12px;
+  top: 8px;
+  left: 8px;
+  padding: 2px 8px;
   background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(8px);
   border-radius: var(--radius-full);
-  font-size: 0.75rem;
+  font-size: 0.625rem;
   font-weight: 500;
   color: var(--primary-color);
 }
 
 .card-content {
-  padding: 20px;
+  padding: 12px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
 .card-title {
   font-family: var(--font-body);
-  font-size: 1.125rem;
+  font-size: 0.875rem;
   font-weight: 600;
   line-height: 1.4;
   color: var(--text-primary);
@@ -106,9 +106,9 @@ defineProps<{
 }
 
 .card-summary {
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   color: var(--text-tertiary);
-  line-height: 1.6;
+  line-height: 1.5;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -117,28 +117,28 @@ defineProps<{
 
 .card-meta {
   display: flex;
-  gap: 16px;
-  font-size: 0.8125rem;
+  gap: 10px;
+  font-size: 0.6875rem;
   color: var(--text-tertiary);
 }
 
 .meta-item {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
 }
 
 .card-tags {
   display: flex;
-  gap: 8px;
+  gap: 4px;
   flex-wrap: wrap;
 }
 
 .tag {
-  padding: 4px 10px;
+  padding: 2px 6px;
   background: var(--bg-secondary);
   border-radius: var(--radius-full);
-  font-size: 0.75rem;
+  font-size: 0.625rem;
   color: var(--text-secondary);
 }
 </style>

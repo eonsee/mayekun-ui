@@ -87,22 +87,36 @@
     <!-- Stats Section -->
     <section class="stats-section">
       <div class="container">
-        <div class="stats-grid">
-          <div class="stat-item">
-            <div class="stat-number">{{ articles.length }}+</div>
-            <div class="stat-label">篇文章</div>
+        <div class="stats-content">
+          <div class="stats-info">
+            <h2 class="stats-title">数据统计</h2>
+            <p class="stats-desc">持续输出高质量内容，记录成长轨迹</p>
+            <div class="stats-grid">
+              <div class="stat-item">
+                <FileText :size="28" class="stat-icon" />
+                <div class="stat-content">
+                  <div class="stat-number">{{ articles.length }}+</div>
+                  <div class="stat-label">篇文章</div>
+                </div>
+              </div>
+              <div class="stat-item">
+                <FolderOpen :size="28" class="stat-icon" />
+                <div class="stat-content">
+                  <div class="stat-number">{{ works.length }}+</div>
+                  <div class="stat-label">个作品</div>
+                </div>
+              </div>
+              <div class="stat-item">
+                <Calendar :size="28" class="stat-icon" />
+                <div class="stat-content">
+                  <div class="stat-number">5+</div>
+                  <div class="stat-label">年经验</div>
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="stat-item">
-            <div class="stat-number">{{ works.length }}+</div>
-            <div class="stat-label">个作品</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-number">5+</div>
-            <div class="stat-label">年经验</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-number">10K+</div>
-            <div class="stat-label">次阅读</div>
+          <div class="stats-chart-wrapper">
+            <StatsChart />
           </div>
         </div>
       </div>
@@ -112,10 +126,11 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { BookOpen, User, ArrowRight, ChevronDown } from 'lucide-vue-next'
+import { BookOpen, User, ArrowRight, ChevronDown, FileText, FolderOpen, Calendar } from 'lucide-vue-next'
 import { useBlogStore } from '@/store'
 import ArticleCard from '@/components/article/ArticleCard.vue'
 import WorkCard from '@/components/work/WorkCard.vue'
+import StatsChart from '@/components/home/StatsChart.vue'
 
 const blogStore = useBlogStore()
 
@@ -391,30 +406,86 @@ const getParticleStyle = (index: number) => {
 /* Stats Section */
 .stats-section {
   padding: 80px 0;
-  background: var(--primary-gradient);
+  background: var(--bg-secondary);
+}
+
+.stats-content {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  gap: 48px;
+  align-items: stretch;
+}
+
+.stats-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.stats-title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+  color: var(--text-primary);
+}
+
+.stats-desc {
+  font-size: 1rem;
+  color: var(--text-tertiary);
+  margin-bottom: 32px;
 }
 
 .stats-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1;
 }
 
 .stat-item {
-  text-align: center;
-  color: white;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-fast);
+  flex: 1;
+}
+
+.stat-item:hover {
+  transform: translateX(8px);
+  box-shadow: var(--shadow-md);
+}
+
+.stat-icon {
+  color: var(--primary-color);
+  flex-shrink: 0;
+}
+
+.stat-content {
+  flex: 1;
 }
 
 .stat-number {
-  font-family: var(--font-display);
-  font-size: 3rem;
+  font-size: 1.5rem;
   font-weight: 700;
-  margin-bottom: 8px;
+  color: var(--text-primary);
+  line-height: 1.2;
 }
 
 .stat-label {
-  font-size: 1rem;
-  opacity: 0.9;
+  font-size: 0.875rem;
+  color: var(--text-tertiary);
+}
+
+.stats-chart-wrapper {
+  background: var(--bg-primary);
+  border-radius: var(--radius-xl);
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+  margin-top: 52px;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Responsive */
@@ -446,9 +517,24 @@ const getParticleStyle = (index: number) => {
     grid-template-columns: repeat(2, 1fr);
   }
 
+  .stats-content {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
   .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 48px;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .stat-item {
+    flex: 1;
+    min-width: 140px;
+  }
+
+  .stats-chart-wrapper {
+    margin-top: 0;
+    height: auto;
   }
 }
 
@@ -463,11 +549,20 @@ const getParticleStyle = (index: number) => {
   }
 
   .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
+    flex-direction: column;
+  }
+
+  .stat-item {
+    min-width: 100%;
   }
 
   .stat-number {
-    font-size: 2.5rem;
+    font-size: 1.25rem;
+  }
+
+  .stats-chart-wrapper {
+    margin-top: 0;
+    height: auto;
   }
 }
 </style>

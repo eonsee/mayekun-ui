@@ -64,9 +64,14 @@ const currentYear = computed(() => new Date().getFullYear())
 
 <style scoped>
 .app-footer {
-  background: var(--bg-secondary);
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
   border-top: 1px solid var(--border-color);
   padding: 48px 0 24px;
+}
+
+[data-theme='dark'] .app-footer {
+  background: rgba(15, 15, 26, 0.8);
 }
 
 .footer-container {

@@ -41,8 +41,8 @@ export interface Profile {
   }
   skills: {
     name: string
-    level: number
-    category: string
+    icon: string
+    url?: string
   }[]
 }
 

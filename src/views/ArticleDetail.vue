@@ -1,4 +1,5 @@
 <template>
+  <!-- Article Found -->
   <div class="article-detail-page" v-if="article">
     <article class="article-container">
       <!-- Article Header -->
@@ -28,22 +29,15 @@
       <div class="article-content-wrapper">
         <div class="container">
           <div class="article-layout">
-            <div class="article-content" v-html="renderedContent"></div>
+            <div class="article-main">
+              <div class="article-content" v-html="renderedContent"></div>
+              <p class="copyright-text">
+                本站内容均为原创首发，未经许可，不允许转载。
+              </p>
+            </div>
             <aside class="article-sidebar">
               <ArticleToc :content="article.content" />
             </aside>
-          </div>
-        </div>
-      </div>
-
-      <!-- Copyright Notice -->
-      <div class="copyright-notice">
-        <div class="container">
-          <div class="copyright-content">
-            <h4>版权声明</h4>
-            <p>本文作者：{{ profile.name }}</p>
-            <p>本文首发于 <a href="https://mayekun.com" target="_blank">mayekun.com</a>，转载请注明出处。</p>
-            <p>© {{ currentYear }} {{ profile.name }} 版权所有，未经授权禁止转载。</p>
           </div>
         </div>
       </div>
@@ -69,6 +63,39 @@
       </footer>
     </article>
 
+    <!-- Article Navigation -->
+    <section class="article-navigation" v-if="prevArticle || nextArticle">
+      <div class="container">
+        <div class="nav-cards">
+          <router-link
+            v-if="prevArticle"
+            :to="`/article/${prevArticle.id}`"
+            class="nav-card prev"
+          >
+            <div class="nav-direction">
+              <ChevronLeft :size="20" />
+              <span>上一篇</span>
+            </div>
+            <div class="nav-title">{{ prevArticle.title }}</div>
+          </router-link>
+          <div v-else class="nav-card empty"></div>
+
+          <router-link
+            v-if="nextArticle"
+            :to="`/article/${nextArticle.id}`"
+            class="nav-card next"
+          >
+            <div class="nav-direction">
+              <span>下一篇</span>
+              <ChevronRight :size="20" />
+            </div>
+            <div class="nav-title">{{ nextArticle.title }}</div>
+          </router-link>
+          <div v-else class="nav-card empty"></div>
+        </div>
+      </div>
+    </section>
+
     <!-- Related Articles -->
     <section class="related-section" v-if="relatedArticles.length > 0">
       <div class="container">
@@ -83,6 +110,12 @@
       </div>
     </section>
   </div>
+
+  <!-- Auto Reader & Floating Music Player -->
+  <template v-if="article">
+    <AutoReader />
+    <FloatingMusicPlayer />
+  </template>
 
   <!-- Not Found -->
   <div v-else class="not-found">
@@ -99,15 +132,17 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { Share2, FileQuestion, ArrowLeft } from 'lucide-vue-next'
+import { Share2, FileQuestion, ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import MarkdownIt from 'markdown-it'
 import hljs from 'highlight.js'
 import 'highlight.js/styles/github-dark.css'
 import { useBlogStore } from '@/store'
 import ArticleCard from '@/components/article/ArticleCard.vue'
 import ArticleToc from '@/components/article/ArticleToc.vue'
+import AutoReader from '@/components/article/AutoReader.vue'
+import FloatingMusicPlayer from '@/components/article/FloatingMusicPlayer.vue'
 import myAvatar from '@/assets/my.jpg'
 
 const route = useRoute()
@@ -121,21 +156,71 @@ const relatedArticles = computed(() => {
   return blogStore.getRelatedArticles(article.value.id)
 })
 
+const prevNextArticles = computed(() => {
+  if (!article.value) return { prev: null, next: null }
+  return blogStore.getPrevNextArticles(article.value.id)
+})
+
+const prevArticle = computed(() => prevNextArticles.value.prev)
+const nextArticle = computed(() => prevNextArticles.value.next)
+
+// 路由变化时滚动到顶部
+watch(() => route.params.id, () => {
+  window.scrollTo(0, 0)
+})
+
 const md = new MarkdownIt({
   html: true,
   linkify: true,
   typographer: true,
   highlight: function (str, lang) {
+    let code = str
     if (lang && hljs.getLanguage(lang)) {
       try {
-        return `<pre class="hljs"><code>${hljs.highlight(str, { language: lang, ignoreIllegals: true }).value}</code></pre>`
+        code = hljs.highlight(str, { language: lang, ignoreIllegals: true }).value
       } catch (e) {
         console.error(e)
       }
+    } else {
+      code = md.utils.escapeHtml(str)
     }
-    return `<pre class="hljs"><code>${md.utils.escapeHtml(str)}</code></pre>`
+
+    const lines = code.split('\n')
+    const linesCode = lines.map((line, i) => {
+      return `<span class="code-line"><span class="line-number">${i + 1}</span><span class="line-content">${line}</span></span>`
+    }).join('')
+
+    return `<div class="code-block"><div class="code-header"><span class="code-lang">${lang || 'code'}</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div><pre class="hljs"><code>${linesCode}</code></pre></div>`
   }
 })
+
+// 为标题添加 id
+md.renderer.rules.heading_open = function (tokens, idx) {
+  const token = tokens[idx]
+  const level = token.tag
+  const nextToken = tokens[idx + 1]
+  if (nextToken && nextToken.type === 'inline') {
+    const text = nextToken.content
+    const id = text.toLowerCase().replace(/\s+/g, '-').replace(/[^\w\u4e00-\u9fa5-]/g, '')
+    return `<${level} id="${id}">`
+  }
+  return `<${level}>`
+}
+
+// 全局复制函数
+;(window as any).copyCode = function(btn: HTMLElement) {
+  const codeBlock = btn.closest('.code-block')
+  const code = codeBlock?.querySelector('code')
+  if (code) {
+    const text = code.textContent || ''
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = '已复制'
+      setTimeout(() => {
+        btn.textContent = '复制'
+      }, 2000)
+    })
+  }
+}
 
 const renderedContent = computed(() => {
   if (!article.value) return ''
@@ -229,6 +314,7 @@ const shareArticle = () => {
 .article-cover img {
   width: 100%;
   height: auto;
+  display: block;
 }
 
 .article-content-wrapper {
@@ -241,8 +327,21 @@ const shareArticle = () => {
   gap: 48px;
 }
 
+.article-main {
+  max-width: 720px;
+}
+
 .article-content {
   max-width: 720px;
+}
+
+.copyright-text {
+  font-size: 0.8125rem;
+  color: var(--text-tertiary);
+  margin-top: 32px;
+  padding: 12px 16px;
+  background: #f8fafc;
+  border-radius: var(--radius-md);
 }
 
 .article-content :deep(h1),
@@ -258,15 +357,89 @@ const shareArticle = () => {
   line-height: 1.8;
 }
 
+/* 代码块样式 */
+.article-content :deep(.code-block) {
+  margin: 24px 0;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: #1e1e1e;
+}
+
+.article-content :deep(.code-header) {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px;
+  background: #2d2d2d;
+  border-bottom: 1px solid #3d3d3d;
+}
+
+.article-content :deep(.code-lang) {
+  font-size: 0.75rem;
+  color: #888;
+  text-transform: uppercase;
+}
+
+.article-content :deep(.copy-btn) {
+  padding: 4px 12px;
+  font-size: 0.75rem;
+  color: #888;
+  background: transparent;
+  border: 1px solid #444;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.article-content :deep(.copy-btn:hover) {
+  color: #fff;
+  border-color: #666;
+}
+
+.article-content :deep(pre.hljs) {
+  margin: 0;
+  padding: 16px;
+  background: #1e1e1e;
+  overflow-x: auto;
+}
+
+.article-content :deep(code) {
+  font-family: Consolas, Monaco, 'Courier New', monospace;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.article-content :deep(.code-line) {
+  display: block;
+  min-height: 1.6em;
+}
+
+.article-content :deep(.line-number) {
+  display: inline-block;
+  width: 40px;
+  color: #555;
+  text-align: right;
+  padding-right: 16px;
+  user-select: none;
+}
+
+.article-content :deep(.line-content) {
+  color: #d4d4d4;
+}
+
+/* 行内代码 */
+.article-content :deep(code:not(.hljs code)) {
+  padding: 2px 6px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-sm);
+  font-family: Consolas, Monaco, 'Courier New', monospace;
+  font-size: 0.875rem;
+}
+
 .article-content :deep(pre) {
   margin: 24px 0;
   border-radius: var(--radius-lg);
   overflow: hidden;
-}
-
-.article-content :deep(code) {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.875rem;
 }
 
 .article-content :deep(blockquote) {
@@ -302,49 +475,6 @@ const shareArticle = () => {
   position: sticky;
   top: 88px;
   height: fit-content;
-}
-
-/* Copyright Notice */
-.copyright-notice {
-  padding: 32px 0;
-  background: var(--bg-secondary);
-  margin-top: 32px;
-}
-
-.copyright-content {
-  max-width: 720px;
-  padding: 24px;
-  background: var(--bg-primary);
-  border-radius: var(--radius-lg);
-  border-left: 4px solid var(--primary-color);
-}
-
-.copyright-content h4 {
-  font-family: var(--font-body);
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 12px;
-}
-
-.copyright-content p {
-  font-size: 0.875rem;
-  color: var(--text-secondary);
-  line-height: 1.8;
-  margin-bottom: 8px;
-}
-
-.copyright-content p:last-child {
-  margin-bottom: 0;
-}
-
-.copyright-content a {
-  color: var(--primary-color);
-  text-decoration: none;
-}
-
-.copyright-content a:hover {
-  text-decoration: underline;
 }
 
 .article-footer {
@@ -404,6 +534,62 @@ const shareArticle = () => {
   color: var(--text-primary);
 }
 
+/* Article Navigation */
+.article-navigation {
+  padding: 48px 0;
+  background: var(--bg-primary);
+}
+
+.nav-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.nav-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 24px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  text-decoration: none;
+  transition: all var(--transition-fast);
+}
+
+.nav-card:hover {
+  background: var(--bg-tertiary);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.nav-card.empty {
+  background: transparent;
+}
+
+.nav-direction {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.875rem;
+  color: var(--text-tertiary);
+}
+
+.nav-title {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  line-height: 1.4;
+}
+
+.nav-card.next {
+  text-align: right;
+}
+
+.nav-card.next .nav-direction {
+  justify-content: flex-end;
+}
+
 .related-section {
   padding: 64px 0;
   background: var(--bg-secondary);
@@ -460,6 +646,10 @@ const shareArticle = () => {
 
   .related-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .nav-cards {
+    grid-template-columns: 1fr;
   }
 }
 

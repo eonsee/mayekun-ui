@@ -1,10 +1,14 @@
 <template>
   <div class="articles-page">
     <div class="container">
-      <!-- Page Header -->
-      <div class="page-header">
-        <h1 class="page-title">文章</h1>
-        <p class="page-subtitle">探索技术世界，分享学习心得</p>
+      <!-- Top Section: Heatmap + Music Player -->
+      <div class="top-section">
+        <div class="heatmap-wrapper">
+          <ActivityHeatmap />
+        </div>
+        <div class="tree-wrapper">
+          <SeasonTree />
+        </div>
       </div>
 
       <!-- Filters -->
@@ -33,15 +37,44 @@
       </div>
 
       <!-- Articles Grid -->
-      <div v-if="filteredArticles.length > 0" class="articles-grid">
-        <ArticleCard
-          v-for="(article, index) in filteredArticles"
-          :key="article.id"
-          :article="article"
-          :style="{ animationDelay: `${index * 0.05}s` }"
-          class="animate-fade-in-up"
-        />
-      </div>
+      <template v-if="filteredArticles.length > 0">
+        <div class="articles-grid">
+          <ArticleCard
+            v-for="(article, index) in paginatedArticles"
+            :key="article.id"
+            :article="article"
+            :style="{ animationDelay: `${index * 0.05}s` }"
+            class="animate-fade-in-up"
+          />
+        </div>
+
+        <!-- Pagination -->
+        <div v-if="totalPages > 1" class="pagination">
+          <button class="page-btn" :disabled="currentPage === 1" @click="currentPage = 1">
+            <ChevronsLeft :size="16" />
+          </button>
+          <button class="page-btn" :disabled="currentPage === 1" @click="currentPage--">
+            <ChevronLeft :size="16" />
+          </button>
+          <template v-for="page in displayedPages" :key="page">
+            <span v-if="page === '...'" class="page-ellipsis">...</span>
+            <button
+              v-else
+              class="page-btn"
+              :class="{ active: currentPage === page }"
+              @click="currentPage = page as number"
+            >
+              {{ page }}
+            </button>
+          </template>
+          <button class="page-btn" :disabled="currentPage === totalPages" @click="currentPage++">
+            <ChevronRight :size="16" />
+          </button>
+          <button class="page-btn" :disabled="currentPage === totalPages" @click="currentPage = totalPages">
+            <ChevronsRight :size="16" />
+          </button>
+        </div>
+      </template>
 
       <!-- Empty State -->
       <div v-else class="empty-state">
@@ -54,12 +87,16 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { Search, FileQuestion } from 'lucide-vue-next'
+import { computed, ref, watch } from 'vue'
+import { Search, FileQuestion, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-vue-next'
 import { useBlogStore } from '@/store'
 import ArticleCard from '@/components/article/ArticleCard.vue'
+import ActivityHeatmap from '@/components/article/ActivityHeatmap.vue'
+import SeasonTree from '@/components/article/SeasonTree.vue'
 
 const blogStore = useBlogStore()
+const currentPage = ref(1)
+const pageSize = 8
 
 const categories = computed(() => blogStore.allCategories)
 const currentCategory = computed(() => blogStore.currentCategory)
@@ -69,9 +106,41 @@ const searchQuery = computed({
 })
 const filteredArticles = computed(() => blogStore.filteredArticles)
 
+const totalPages = computed(() => Math.ceil(filteredArticles.value.length / pageSize))
+
+const paginatedArticles = computed(() => {
+  const start = (currentPage.value - 1) * pageSize
+  return filteredArticles.value.slice(start, start + pageSize)
+})
+
+const displayedPages = computed(() => {
+  const total = totalPages.value
+  const current = currentPage.value
+  const pages: (number | string)[] = []
+
+  if (total <= 7) {
+    for (let i = 1; i <= total; i++) pages.push(i)
+  } else {
+    pages.push(1)
+    if (current > 3) pages.push('...')
+    const start = Math.max(2, current - 1)
+    const end = Math.min(total - 1, current + 1)
+    for (let i = start; i <= end; i++) pages.push(i)
+    if (current < total - 2) pages.push('...')
+    pages.push(total)
+  }
+
+  return pages
+})
+
 const setCategory = (category: string) => {
   blogStore.setCategory(category)
+  currentPage.value = 1
 }
+
+watch(searchQuery, () => {
+  currentPage.value = 1
+})
 </script>
 
 <style scoped>
@@ -80,27 +149,26 @@ const setCategory = (category: string) => {
   min-height: calc(100vh - 64px);
 }
 
-.page-header {
-  text-align: center;
-  margin-bottom: 48px;
+.top-section {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+  margin-bottom: 32px;
 }
 
-.page-title {
-  font-size: 2.5rem;
-  font-weight: 700;
-  margin-bottom: 12px;
+.heatmap-wrapper {
+  height: 100%;
 }
 
-.page-subtitle {
-  font-size: 1.125rem;
-  color: var(--text-tertiary);
+.tree-wrapper {
+  height: 100%;
 }
 
 .filters-section {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 40px;
+  margin: 32px 0;
   flex-wrap: wrap;
   gap: 16px;
 }
@@ -174,8 +242,8 @@ const setCategory = (category: string) => {
 
 .articles-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
 }
 
 .empty-state {
@@ -195,9 +263,63 @@ const setCategory = (category: string) => {
   margin-bottom: 8px;
 }
 
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  margin-top: 40px;
+}
+
+.page-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 36px;
+  padding: 0 8px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.page-btn:hover:not(:disabled):not(.active) {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.page-btn.active {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  color: white;
+}
+
+.page-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.page-ellipsis {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 36px;
+  color: var(--text-tertiary);
+  font-size: 0.875rem;
+}
+
 @media (max-width: 1024px) {
+  .top-section {
+    grid-template-columns: 1fr;
+  }
+
   .articles-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 
@@ -218,7 +340,7 @@ const setCategory = (category: string) => {
   }
 
   .articles-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 </style>

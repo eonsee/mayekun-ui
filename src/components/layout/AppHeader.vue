@@ -2,7 +2,7 @@
   <header class="app-header" :class="{ 'header-scrolled': isScrolled }">
     <div class="container header-container">
       <router-link to="/" class="logo">
-        <span class="logo-text gradient-text">mayekun.com</span>
+        <img :src="logo" alt="Logo" class="logo-image" />
       </router-link>
 
       <nav class="nav-menu" :class="{ 'nav-open': isMobileMenuOpen }">
@@ -35,6 +35,7 @@
 <script setup lang="ts">
 import { ref, inject, onMounted, onUnmounted } from 'vue'
 import { Sun, Moon, Menu, X } from 'lucide-vue-next'
+import logo from '@/assets/logo1.png'
 
 const { isDark, toggleTheme } = inject('theme') as {
   isDark: { value: boolean }
@@ -108,11 +109,9 @@ onUnmounted(() => {
   gap: 8px;
 }
 
-.logo-text {
-  font-family: var(--font-display);
-  font-size: 1.5rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+.logo-image {
+  height: 32px;
+  width: auto;
 }
 
 .nav-menu {

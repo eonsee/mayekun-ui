@@ -106,8 +106,6 @@ onUnmounted(() => {
   font-size: 0.8125rem;
   color: var(--text-tertiary);
   padding: 6px 0;
-  border-left: 2px solid transparent;
-  padding-left: 12px;
   transition: all var(--transition-fast);
 }
 
@@ -117,6 +115,5 @@ onUnmounted(() => {
 
 .toc-item.active a {
   color: var(--primary-color);
-  border-left-color: var(--primary-color);
 }
 </style>

@@ -1,41 +1,36 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import Home from '@/views/Home.vue'
-import Articles from '@/views/Articles.vue'
-import ArticleDetail from '@/views/ArticleDetail.vue'
-import About from '@/views/About.vue'
-import Works from '@/views/Works.vue'
 
 // 定义路由配置
 const routes = [
   {
     path: '/',
     name: 'home',
-    component: Home,
-    meta: { title: '首页 - Mayekun' }
+    component: () => import('@/views/Home.vue'),
+    meta: { title: '马业坤' }
   },
   {
     path: '/articles',
     name: 'articles',
-    component: Articles,
-    meta: { title: '文章 - Mayekun' }
+    component: () => import('@/views/Articles.vue'),
+    meta: { title: '马业坤-文章' }
   },
   {
     path: '/article/:id',
     name: 'article-detail',
-    component: ArticleDetail,
-    meta: { title: '文章详情 - Mayekun' }
+    component: () => import('@/views/ArticleDetail.vue'),
+    meta: { title: '马业坤-文章详情' }
   },
   {
     path: '/about',
     name: 'about',
-    component: About,
-    meta: { title: '关于 - Mayekun' }
+    component: () => import('@/views/About.vue'),
+    meta: { title: '马业坤-关于' }
   },
   {
     path: '/works',
     name: 'works',
-    component: Works,
-    meta: { title: '作品 - Mayekun' }
+    component: () => import('@/views/Works.vue'),
+    meta: { title: '马业坤-作品' }
   },
 ]
 
@@ -54,7 +49,7 @@ const router = createRouter({
 
 // 路由守卫 - 设置页面标题
 router.beforeEach((to, from, next) => {
-  document.title = (to.meta.title as string) || 'Mayekun'
+  document.title = (to.meta.title as string) || '马业坤'
   next()
 })
 
