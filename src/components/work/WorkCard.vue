@@ -1,13 +1,13 @@
 <template>
-  <div class="work-card">
+  <div class="work-card" :class="{ active: active }" @click="$emit('select')">
     <div class="card-image">
       <img :src="work.cover" :alt="work.title" loading="lazy" />
       <div class="card-overlay">
-        <a v-if="work.link" :href="work.link" target="_blank" class="overlay-btn">
+        <a v-if="work.link" :href="work.link" target="_blank" class="overlay-btn" @click.stop>
           <ExternalLink :size="18" />
           访问
         </a>
-        <a v-if="work.github" :href="work.github" target="_blank" class="overlay-btn">
+        <a v-if="work.github" :href="work.github" target="_blank" class="overlay-btn" @click.stop>
           <Github :size="18" />
           源码
         </a>
@@ -32,6 +32,11 @@ import type { Work } from '@/types'
 
 defineProps<{
   work: Work
+  active?: boolean
+}>()
+
+defineEmits<{
+  select: []
 }>()
 </script>
 
@@ -50,6 +55,11 @@ defineProps<{
   transform: translateY(-4px);
   box-shadow: var(--shadow-lg);
   border-color: transparent;
+}
+
+.work-card.active {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
 }
 
 .card-image {

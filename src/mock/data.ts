@@ -599,7 +599,11 @@ export const works: Work[] = [
     title: 'Mayekun 个人博客',
     description: '基于 Vue 3 + TypeScript 构建的现代个人博客系统，支持文章发布、作品展示等功能。',
     cover: 'https://picsum.photos/seed/blog/800/450',
-    images: [],
+    images: [
+      'https://picsum.photos/seed/blog-home2/800/450',
+      'https://picsum.photos/seed/blog-article2/800/450',
+      'https://picsum.photos/seed/blog-works2/800/450',
+    ],
     category: '网站',
     tags: ['Vue', 'TypeScript', '博客'],
     link: 'https://mayekun.com',
@@ -611,10 +615,14 @@ export const works: Work[] = [
     title: '任务管理应用',
     description: '功能完善的任务管理应用，支持看板视图、甘特图、团队协作等功能。',
     cover: 'https://picsum.photos/seed/kanban/800/450',
-    images: [],
+    images: [
+      'https://picsum.photos/seed/kanban-board2/800/450',
+      'https://picsum.photos/seed/kanban-gantt2/800/450',
+      'https://picsum.photos/seed/kanban-team2/800/450',
+    ],
     category: '应用',
     tags: ['React', 'Node.js', '协作'],
-    link: 'https://tasks.example.com',
+    link: '',
     createdAt: '2024-01-01'
   },
   {
@@ -622,10 +630,14 @@ export const works: Work[] = [
     title: '数据可视化平台',
     description: '企业级数据可视化平台，支持多种图表类型、实时数据更新和自定义仪表盘。',
     cover: 'https://picsum.photos/seed/dataviz/800/450',
-    images: [],
+    images: [
+      'https://picsum.photos/seed/dataviz-dash2/800/450',
+      'https://picsum.photos/seed/dataviz-chart2/800/450',
+      'https://picsum.photos/seed/dataviz-real2/800/450',
+    ],
     category: '平台',
     tags: ['Vue', 'ECharts', '数据可视化'],
-    link: 'https://data.example.com',
+    link: '',
     createdAt: '2023-12-15'
   },
   {
@@ -633,7 +645,11 @@ export const works: Work[] = [
     title: '电商小程序',
     description: '功能完整的电商小程序，包含商品展示、购物车、订单管理等核心功能。',
     cover: 'https://picsum.photos/seed/ecommerce/800/450',
-    images: [],
+    images: [
+      'https://picsum.photos/seed/ecommerce-home2/800/450',
+      'https://picsum.photos/seed/ecommerce-cart2/800/450',
+      'https://picsum.photos/seed/ecommerce-order2/800/450',
+    ],
     category: '小程序',
     tags: ['微信小程序', '电商', '移动端'],
     link: '',
@@ -644,11 +660,14 @@ export const works: Work[] = [
     title: '在线协作白板',
     description: '实时协作的在线白板工具，支持多人同时编辑、图形绘制、思维导图等功能。',
     cover: 'https://picsum.photos/seed/whiteboard/800/450',
-    images: [],
+    images: [
+      'https://picsum.photos/seed/whiteboard-draw2/800/450',
+      'https://picsum.photos/seed/whiteboard-collab2/800/450',
+      'https://picsum.photos/seed/whiteboard-mind2/800/450',
+    ],
     category: '工具',
     tags: ['Canvas', 'WebSocket', '协作'],
-    link: 'https://board.example.com',
-    github: 'https://github.com/mayekun/whiteboard',
+    link: '',
     createdAt: '2023-10-10'
   },
   {
@@ -656,10 +675,14 @@ export const works: Work[] = [
     title: 'API 文档生成器',
     description: '自动从代码注释生成 API 文档的工具，支持多种编程语言和文档格式。',
     cover: 'https://picsum.photos/seed/apidoc/800/450',
-    images: [],
+    images: [
+      'https://picsum.photos/seed/apidoc-gen2/800/450',
+      'https://picsum.photos/seed/apidoc-preview2/800/450',
+      'https://picsum.photos/seed/apidoc-export2/800/450',
+    ],
     category: '工具',
     tags: ['Node.js', '文档', '开源'],
-    link: 'https://apidoc.example.com',
+    link: '',
     github: 'https://github.com/mayekun/apidoc',
     createdAt: '2023-09-01'
   }
