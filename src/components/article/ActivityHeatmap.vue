@@ -81,7 +81,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useBlogStore } from '@/store'
 
 const blogStore = useBlogStore()
@@ -100,7 +100,6 @@ const seasons: { key: 'spring' | 'summer' | 'autumn' | 'winter'; label: string; 
   { key: 'winter', label: '冬季', icon: '冬' }
 ]
 
-// 获取当前季节
 // 计算起始日期的偏移量（用于对齐周天）
 const getStartOffset = (): number => {
   const today = new Date()
@@ -135,35 +134,41 @@ const generateMonthLabels = (): string[] => {
 
 const monthLabels = generateMonthLabels()
 
-// 生成过去一年的活动数据
-const generateActivityData = (): ActivityDay[] => {
+// 将后端热力图数据填充到 365 天网格中
+const activityData = computed<ActivityDay[]>(() => {
   const data: ActivityDay[] = []
   const today = new Date()
+  // 构建后端数据的 Map，方便查找
+  const heatMapMap = new Map<string, number>()
+  blogStore.heatMapData.forEach((item) => {
+    // 后端 LocalDate 序列化为 "yyyy-MM-dd"，直接使用
+    console.log('[Heatmap] 后端数据项:', item, 'date类型:', typeof item.date)
+    heatMapMap.set(item.date, item.count)
+  })
+  console.log('[Heatmap] heatMapMap:', [...heatMapMap.entries()])
+  console.log('[Heatmap] store.heatMapData 长度:', blogStore.heatMapData.length)
 
   for (let i = 364; i >= 0; i--) {
     const date = new Date(today)
     date.setDate(date.getDate() - i)
-    const dateStr = date.toISOString().split('T')[0]
-
-    // 模拟数据：随机生成 0-3 篇文章
-    const random = Math.random()
-    let count = 0
-    if (random > 0.7) count = Math.floor(Math.random() * 3) + 1
-
+    // 使用本地时区格式化日期，避免 toISOString() 的 UTC 偏移问题
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const dateStr = `${year}-${month}-${day}`
+    const count = heatMapMap.get(dateStr) || 0
     data.push({ date: dateStr, count })
   }
 
   return data
-}
-
-const activityData = generateActivityData()
+})
 
 const totalArticles = computed(() => {
-  return activityData.reduce((sum, day) => sum + day.count, 0)
+  return activityData.value.reduce((sum, day) => sum + day.count, 0)
 })
 
 const activeDays = computed(() => {
-  return activityData.filter(day => day.count > 0).length
+  return activityData.value.filter(day => day.count > 0).length
 })
 
 const getLevelClass = (count: number): string => {
@@ -174,6 +179,11 @@ const getLevelClass = (count: number): string => {
   if (count === 3) return `${season}-level-3`
   return `${season}-level-4`
 }
+
+// 组件加载时拉取热力图数据
+onMounted(() => {
+  blogStore.fetchHeatMapData()
+})
 </script>
 
 <style scoped>

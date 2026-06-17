@@ -43,6 +43,16 @@
                   <path d="M10.098 20c-4.612 0-8.59-2.507-8.59-5.5 0-1.56.932-3.36 2.53-5.076 2.133-2.267 4.618-3.293 5.548-2.293.425.45.507 1.19.243 2.13-.14.49.36.34.36.34 1.44-.51 2.75-.54 3.23.24.25.41.25.95-.02 1.55-.14.32.02.42.28.36.93-.19 1.65-.12 2.04.37.43.54.36 1.38-.17 2.38-.9 1.7-3.12 4.89-5.51 4.89zm-.17-10.19c-2.18.07-3.94 1.62-3.94 3.46 0 1.84 1.76 3.3 3.94 3.23 2.18-.07 3.94-1.62 3.94-3.46 0-1.84-1.76-3.3-3.94-3.23z"/>
                 </svg>
               </a>
+              <a v-if="profile.social.gitee" :href="profile.social.gitee" target="_blank" class="social-link" title="Gitee">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" fill-rule="evenodd">
+                  <path d="M11.984 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.016 0zM7.527 4.5c-.55 0-1 .45-1 1s.45 1 1 1h3.5c.55 0 1 .45 1 1s-.45 1-1 1h-3.5c-.55 0-1 .45-1 1s.45 1 1 1h3.5c.55 0 1 .45 1 1s-.45 1-1 1h-3.5c-.55 0-1 .45-1 1s.45 1 1 1h3.5c.55 0 1 .45 1 1s-.45 1-1 1h-3.5c-.55 0-1 .45-1 1s.45 1 1 1h7.5c2.21 0 4-1.79 4-4s-1.79-4-4-4h-7.5z"/>
+                </svg>
+              </a>
+              <a v-if="profile.social.juejin" :href="profile.social.juejin" target="_blank" class="social-link" title="掘金">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                  <path d="M12 14.316l7.454-5.88-2.022-1.625L12 10.995l-5.432-4.184-2.022 1.625L12 14.316zm0-7.47l7.454-5.88-2.022-1.626L12 3.527l-5.432-4.187-2.022 1.626L12 6.846zm0 14.94l-7.454-5.88 2.022-1.626L12 19.995l5.432-4.215 2.022 1.626L12 21.856z"/>
+                </svg>
+              </a>
               <a :href="`mailto:${profile.email}`" class="social-link">
                 <Mail :size="20" />
               </a>
@@ -171,13 +181,18 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { MapPin, Github, Twitter, Linkedin, Mail, Send, Plus, Info } from 'lucide-vue-next'
 import { useBlogStore } from '@/store'
 import myAvatar from '@/assets/my.jpg'
 
 const blogStore = useBlogStore()
 const profile = computed(() => blogStore.profileData)
+
+onMounted(() => {
+  blogStore.fetchProfile()
+  blogStore.fetchSkills()
+})
 const isPaused = ref(false)
 const hoveredSpot = ref<{ name: string; desc: string; image: string } | null>(null)
 const showRecommendModal = ref(false)

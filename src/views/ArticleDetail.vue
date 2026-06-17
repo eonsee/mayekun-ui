@@ -111,11 +111,18 @@
     </section>
   </div>
 
-  <!-- Auto Reader & Floating Music Player -->
+  <!-- Auto Reader -->
   <template v-if="article">
     <AutoReader />
-    <FloatingMusicPlayer />
   </template>
+
+  <!-- Loading -->
+  <div v-else-if="articleLoading" class="not-found">
+    <div class="container">
+      <div class="loading-spinner"></div>
+      <p>加载中...</p>
+    </div>
+  </div>
 
   <!-- Not Found -->
   <div v-else class="not-found">
@@ -132,23 +139,56 @@
 </template>
 
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed, ref, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { Share2, FileQuestion, ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import MarkdownIt from 'markdown-it'
 import hljs from 'highlight.js'
 import 'highlight.js/styles/github-dark.css'
 import { useBlogStore } from '@/store'
+import type { Article } from '@/types'
 import ArticleCard from '@/components/article/ArticleCard.vue'
 import ArticleToc from '@/components/article/ArticleToc.vue'
 import AutoReader from '@/components/article/AutoReader.vue'
-import FloatingMusicPlayer from '@/components/article/FloatingMusicPlayer.vue'
 import myAvatar from '@/assets/my.jpg'
 
 const route = useRoute()
 const blogStore = useBlogStore()
 
-const article = computed(() => blogStore.getArticleById(route.params.id as string))
+// 文章详情：优先调用后端接口，失败时回退到本地 store
+const article = ref<Article | null>(null)
+const articleLoading = ref(false)
+
+const loadArticle = async (id: string) => {
+  articleLoading.value = true
+  try {
+    const detail = await blogStore.fetchArticleDetail(id)
+    if (detail) {
+      article.value = detail
+    } else {
+      // 接口未返回，回退到本地数据
+      article.value = blogStore.getArticleById(id) || null
+    }
+  } catch (e) {
+    console.warn('[ArticleDetail] 获取文章详情失败，使用本地数据', e)
+    article.value = blogStore.getArticleById(id) || null
+  } finally {
+    articleLoading.value = false
+  }
+}
+
+onMounted(() => {
+  loadArticle(route.params.id as string)
+})
+
+// 路由变化时重新加载文章并滚动到顶部
+watch(() => route.params.id, (newId) => {
+  if (newId) {
+    window.scrollTo(0, 0)
+    loadArticle(newId as string)
+  }
+})
+
 const profile = computed(() => blogStore.profileData)
 const currentYear = computed(() => new Date().getFullYear())
 const relatedArticles = computed(() => {
@@ -163,11 +203,6 @@ const prevNextArticles = computed(() => {
 
 const prevArticle = computed(() => prevNextArticles.value.prev)
 const nextArticle = computed(() => prevNextArticles.value.next)
-
-// 路由变化时滚动到顶部
-watch(() => route.params.id, () => {
-  window.scrollTo(0, 0)
-})
 
 const md = new MarkdownIt({
   html: true,
@@ -309,11 +344,13 @@ const shareArticle = () => {
   overflow: hidden;
   box-shadow: var(--shadow-xl);
   margin-top: -24px;
+  aspect-ratio: 16 / 9;
 }
 
 .article-cover img {
   width: 100%;
-  height: auto;
+  height: 100%;
+  object-fit: cover;
   display: block;
 }
 
@@ -610,6 +647,20 @@ const shareArticle = () => {
   text-align: center;
   padding: 120px 20px;
   color: var(--text-tertiary);
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  margin: 0 auto 16px;
+  border: 3px solid var(--border-color);
+  border-top-color: var(--primary-color);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 .not-found svg {

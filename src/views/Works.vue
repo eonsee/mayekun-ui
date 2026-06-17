@@ -43,7 +43,7 @@
 
               <!-- Node icon -->
               <div class="node-icon" :style="{ background: item.color }">
-                <svg viewBox="0 0 40 40" width="24" height="24" fill="none" v-html="item.svgPath"></svg>
+                <svg viewBox="0 0 40 40" width="24" height="24" fill="none" :style="{ color: item.color }" v-html="item.svgPath"></svg>
               </div>
 
               <!-- Year badge -->
@@ -79,7 +79,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { useBlogStore } from '@/store'
 import WorkCard from '@/components/work/WorkCard.vue'
 
@@ -97,80 +97,48 @@ interface TimelineItem {
   isCurrent: boolean
 }
 
-const timeline: TimelineItem[] = [
-  {
-    year: 2001,
-    label: '诞生',
-    desc: '来到这个世界，开启人生旅程',
-    achievements: [],
-    color: '#f472b6',
-    svgPath: '<circle cx="20" cy="14" r="6" fill="white"/><ellipse cx="20" cy="28" rx="8" ry="6" fill="white"/><circle cx="17" cy="13" r="1" fill="#f472b6"/><circle cx="23" cy="13" r="1" fill="#f472b6"/><path d="M18 16 Q20 18 22 16" stroke="#f472b6" stroke-width="1" fill="none"/>',
-    isCurrent: false
-  },
-  {
-    year: 2006,
-    label: '小学',
-    desc: '踏入校园，启蒙求知之路',
-    achievements: [],
-    color: '#fb923c',
-    svgPath: '<circle cx="20" cy="11" r="5" fill="white"/><rect x="14" y="18" width="12" height="12" rx="3" fill="white"/><line x1="20" y1="30" x2="20" y2="36" stroke="white" stroke-width="2"/><line x1="16" y1="36" x2="24" y2="36" stroke="white" stroke-width="2"/><circle cx="18" cy="10" r="1" fill="#fb923c"/><circle cx="22" cy="10" r="1" fill="#fb923c"/><path d="M18 13 Q20 15 22 13" stroke="#fb923c" stroke-width="1" fill="none"/>',
-    isCurrent: false
-  },
-  {
-    year: 2014,
-    label: '初中',
-    desc: '初识编程，对计算机产生浓厚兴趣',
-    achievements: ['NOIP 初赛'],
-    color: '#facc15',
-    svgPath: '<circle cx="20" cy="10" r="5" fill="white"/><rect x="13" y="17" width="14" height="13" rx="3" fill="white"/><line x1="17" y1="30" x2="15" y2="37" stroke="white" stroke-width="2"/><line x1="23" y1="30" x2="25" y2="37" stroke="white" stroke-width="2"/><circle cx="18" cy="9" r="1" fill="#facc15"/><circle cx="22" cy="9" r="1" fill="#facc15"/><path d="M18 12 Q20 14 22 12" stroke="#facc15" stroke-width="1" fill="none"/><rect x="25" y="14" width="6" height="8" rx="1" fill="white" opacity="0.7"/>',
-    isCurrent: false
-  },
-  {
-    year: 2017,
-    label: '高中',
-    desc: '深入学习编程，参加信息学竞赛',
-    achievements: ['NOIP 提高组', '省级二等奖'],
-    color: '#4ade80',
-    svgPath: '<circle cx="20" cy="10" r="5" fill="white"/><rect x="13" y="17" width="14" height="13" rx="3" fill="white"/><line x1="17" y1="30" x2="15" y2="37" stroke="white" stroke-width="2"/><line x1="23" y1="30" x2="25" y2="37" stroke="white" stroke-width="2"/><rect x="10" y="7" width="20" height="4" rx="2" fill="white" opacity="0.6"/><rect x="14" y="3" width="12" height="5" rx="1" fill="white" opacity="0.5"/><circle cx="18" cy="9" r="1" fill="#4ade80"/><circle cx="22" cy="9" r="1" fill="#4ade80"/><path d="M18 12 Q20 14 22 12" stroke="#4ade80" stroke-width="1" fill="none"/>',
-    isCurrent: false
-  },
-  {
-    year: 2020,
-    label: '大学',
-    desc: '计算机科学与技术专业，系统学习开发技术',
-    achievements: ['全栈开发', '开源贡献', 'ACM 竞赛'],
-    color: '#3b82f6',
-    svgPath: '<circle cx="20" cy="10" r="5" fill="white"/><rect x="13" y="17" width="14" height="13" rx="3" fill="white"/><line x1="17" y1="30" x2="15" y2="37" stroke="white" stroke-width="2"/><line x1="23" y1="30" x2="25" y2="37" stroke="white" stroke-width="2"/><rect x="10" y="7" width="20" height="4" rx="2" fill="white" opacity="0.6"/><circle cx="18" cy="9" r="1" fill="#3b82f6"/><circle cx="22" cy="9" r="1" fill="#3b82f6"/><path d="M18 12 Q20 14 22 12" stroke="#3b82f6" stroke-width="1" fill="none"/><rect x="26" y="20" width="7" height="5" rx="1" fill="white" opacity="0.5"/>',
-    isCurrent: false
-  },
-  {
-    year: 2024,
-    label: '工作',
-    desc: 'Java 后端开发工程师，参与多个企业级项目',
-    achievements: ['微服务架构', 'Spring Cloud', 'DevOps'],
-    color: '#8b5cf6',
-    svgPath: '<circle cx="20" cy="10" r="5" fill="white"/><rect x="13" y="17" width="14" height="13" rx="3" fill="white"/><line x1="17" y1="30" x2="15" y2="37" stroke="white" stroke-width="2"/><line x1="23" y1="30" x2="25" y2="37" stroke="white" stroke-width="2"/><rect x="10" y="17" width="3" height="10" rx="1" fill="white" opacity="0.5"/><circle cx="18" cy="9" r="1" fill="#8b5cf6"/><circle cx="22" cy="9" r="1" fill="#8b5cf6"/><path d="M18 12 Q20 14 22 12" stroke="#8b5cf6" stroke-width="1" fill="none"/><rect x="26" y="14" width="7" height="10" rx="1" fill="white" opacity="0.5"/>',
-    isCurrent: false
-  },
-  {
-    year: 2026,
-    label: '现在',
-    desc: '持续深耕技术，积累项目经验',
-    achievements: ['Mayekun Blog', '开源项目'],
-    color: '#ec4899',
-    svgPath: '<circle cx="20" cy="10" r="5" fill="white"/><rect x="13" y="17" width="14" height="13" rx="3" fill="white"/><line x1="17" y1="30" x2="15" y2="37" stroke="white" stroke-width="2"/><line x1="23" y1="30" x2="25" y2="37" stroke="white" stroke-width="2"/><circle cx="18" cy="9" r="1" fill="#ec4899"/><circle cx="22" cy="9" r="1" fill="#ec4899"/><path d="M18 12 Q20 14 22 12" stroke="#ec4899" stroke-width="1" fill="none"/><circle cx="20" cy="10" r="7" stroke="white" stroke-width="1" fill="none" opacity="0.3"/>',
-    isCurrent: true
-  },
-  {
-    year: 2030,
-    label: '未来',
-    desc: '持续成长，技术赋能业务，创造更多价值',
-    achievements: [],
-    color: '#06b6d4',
-    svgPath: '<circle cx="20" cy="10" r="5" fill="white"/><rect x="13" y="17" width="14" height="13" rx="3" fill="white"/><line x1="17" y1="30" x2="15" y2="37" stroke="white" stroke-width="2"/><line x1="23" y1="30" x2="25" y2="37" stroke="white" stroke-width="2"/><circle cx="18" cy="9" r="1" fill="#06b6d4"/><circle cx="22" cy="9" r="1" fill="#06b6d4"/><path d="M18 12 Q20 14 22 12" stroke="#06b6d4" stroke-width="1" fill="none"/><path d="M28 8 L32 4 L36 8 L32 12 Z" fill="white" opacity="0.5"/><path d="M4 8 L8 4 L12 8 L8 12 Z" fill="white" opacity="0.5"/>',
-    isCurrent: false
-  }
+// iconType → SVG 路径映射
+const iconSvgMap: Record<string, string> = {
+  baby: '<circle cx="20" cy="14" r="6" fill="white"/><ellipse cx="20" cy="28" rx="8" ry="6" fill="white"/><circle cx="17" cy="13" r="1" fill="currentColor"/><circle cx="23" cy="13" r="1" fill="currentColor"/><path d="M18 16 Q20 18 22 16" stroke="currentColor" stroke-width="1" fill="none"/>',
+  child: '<circle cx="20" cy="11" r="5" fill="white"/><rect x="14" y="18" width="12" height="12" rx="3" fill="white"/><line x1="20" y1="30" x2="20" y2="36" stroke="white" stroke-width="2"/><line x1="16" y1="36" x2="24" y2="36" stroke="white" stroke-width="2"/><circle cx="18" cy="10" r="1" fill="currentColor"/><circle cx="22" cy="10" r="1" fill="currentColor"/><path d="M18 13 Q20 15 22 13" stroke="currentColor" stroke-width="1" fill="none"/>',
+  teen: '<circle cx="20" cy="10" r="5" fill="white"/><rect x="13" y="17" width="14" height="13" rx="3" fill="white"/><line x1="17" y1="30" x2="15" y2="37" stroke="white" stroke-width="2"/><line x1="23" y1="30" x2="25" y2="37" stroke="white" stroke-width="2"/><circle cx="18" cy="9" r="1" fill="currentColor"/><circle cx="22" cy="9" r="1" fill="currentColor"/><path d="M18 12 Q20 14 22 12" stroke="currentColor" stroke-width="1" fill="none"/><rect x="25" y="14" width="6" height="8" rx="1" fill="white" opacity="0.7"/>',
+  student: '<circle cx="20" cy="10" r="5" fill="white"/><rect x="13" y="17" width="14" height="13" rx="3" fill="white"/><line x1="17" y1="30" x2="15" y2="37" stroke="white" stroke-width="2"/><line x1="23" y1="30" x2="25" y2="37" stroke="white" stroke-width="2"/><rect x="10" y="7" width="20" height="4" rx="2" fill="white" opacity="0.6"/><rect x="14" y="3" width="12" height="5" rx="1" fill="white" opacity="0.5"/><circle cx="18" cy="9" r="1" fill="currentColor"/><circle cx="22" cy="9" r="1" fill="currentColor"/><path d="M18 12 Q20 14 22 12" stroke="currentColor" stroke-width="1" fill="none"/>',
+  college: '<circle cx="20" cy="10" r="5" fill="white"/><rect x="13" y="17" width="14" height="13" rx="3" fill="white"/><line x1="17" y1="30" x2="15" y2="37" stroke="white" stroke-width="2"/><line x1="23" y1="30" x2="25" y2="37" stroke="white" stroke-width="2"/><rect x="10" y="7" width="20" height="4" rx="2" fill="white" opacity="0.6"/><circle cx="18" cy="9" r="1" fill="currentColor"/><circle cx="22" cy="9" r="1" fill="currentColor"/><path d="M18 12 Q20 14 22 12" stroke="currentColor" stroke-width="1" fill="none"/><rect x="26" y="20" width="7" height="5" rx="1" fill="white" opacity="0.5"/>',
+  worker: '<circle cx="20" cy="10" r="5" fill="white"/><rect x="13" y="17" width="14" height="13" rx="3" fill="white"/><line x1="17" y1="30" x2="15" y2="37" stroke="white" stroke-width="2"/><line x1="23" y1="30" x2="25" y2="37" stroke="white" stroke-width="2"/><rect x="10" y="17" width="3" height="10" rx="1" fill="white" opacity="0.5"/><circle cx="18" cy="9" r="1" fill="currentColor"/><circle cx="22" cy="9" r="1" fill="currentColor"/><path d="M18 12 Q20 14 22 12" stroke="currentColor" stroke-width="1" fill="none"/><rect x="26" y="14" width="7" height="10" rx="1" fill="white" opacity="0.5"/>',
+  now: '<circle cx="20" cy="10" r="5" fill="white"/><rect x="13" y="17" width="14" height="13" rx="3" fill="white"/><line x1="17" y1="30" x2="15" y2="37" stroke="white" stroke-width="2"/><line x1="23" y1="30" x2="25" y2="37" stroke="white" stroke-width="2"/><circle cx="18" cy="9" r="1" fill="currentColor"/><circle cx="22" cy="9" r="1" fill="currentColor"/><path d="M18 12 Q20 14 22 12" stroke="currentColor" stroke-width="1" fill="none"/><circle cx="20" cy="10" r="7" stroke="white" stroke-width="1" fill="none" opacity="0.3"/>',
+  future: '<circle cx="20" cy="10" r="5" fill="white"/><rect x="13" y="17" width="14" height="13" rx="3" fill="white"/><line x1="17" y1="30" x2="15" y2="37" stroke="white" stroke-width="2"/><line x1="23" y1="30" x2="25" y2="37" stroke="white" stroke-width="2"/><circle cx="18" cy="9" r="1" fill="currentColor"/><circle cx="22" cy="9" r="1" fill="currentColor"/><path d="M18 12 Q20 14 22 12" stroke="currentColor" stroke-width="1" fill="none"/><path d="M28 8 L32 4 L36 8 L32 12 Z" fill="white" opacity="0.5"/><path d="M4 8 L8 4 L12 8 L8 12 Z" fill="white" opacity="0.5"/>',
+}
+
+// 默认 mock 数据（接口失败时使用）
+const mockTimeline: TimelineItem[] = [
+  { year: 2001, label: '诞生', desc: '来到这个世界，开启人生旅程', achievements: [], color: '#f472b6', svgPath: iconSvgMap.baby, isCurrent: false },
+  { year: 2006, label: '小学', desc: '踏入校园，启蒙求知之路', achievements: [], color: '#fb923c', svgPath: iconSvgMap.child, isCurrent: false },
+  { year: 2014, label: '初中', desc: '初识编程，对计算机产生浓厚兴趣', achievements: ['NOIP 初赛'], color: '#facc15', svgPath: iconSvgMap.teen, isCurrent: false },
+  { year: 2017, label: '高中', desc: '深入学习编程，参加信息学竞赛', achievements: ['NOIP 提高组', '省级二等奖'], color: '#4ade80', svgPath: iconSvgMap.student, isCurrent: false },
+  { year: 2020, label: '大学', desc: '计算机科学与技术专业，系统学习开发技术', achievements: ['全栈开发', '开源贡献', 'ACM 竞赛'], color: '#3b82f6', svgPath: iconSvgMap.college, isCurrent: false },
+  { year: 2024, label: '工作', desc: 'Java 后端开发工程师，参与多个企业级项目', achievements: ['微服务架构', 'Spring Cloud', 'DevOps'], color: '#8b5cf6', svgPath: iconSvgMap.worker, isCurrent: false },
+  { year: 2026, label: '现在', desc: '持续深耕技术，积累项目经验', achievements: ['Mayekun Blog', '开源项目'], color: '#ec4899', svgPath: iconSvgMap.now, isCurrent: true },
+  { year: 2030, label: '未来', desc: '持续成长，技术赋能业务，创造更多价值', achievements: [], color: '#06b6d4', svgPath: iconSvgMap.future, isCurrent: false },
 ]
+
+// 优先使用后端数据，失败时 fallback 到 mock
+const timeline = computed<TimelineItem[]>(() => {
+  const data = blogStore.growthTimelineData
+  if (!data || data.length === 0) return mockTimeline
+  return data.map((vo) => ({
+    year: vo.year,
+    label: vo.label || '',
+    desc: vo.description || '',
+    achievements: vo.achievement ? vo.achievement.split(/[,，、]/).filter(Boolean) : [],
+    color: vo.color || '#3b82f6',
+    svgPath: iconSvgMap[vo.iconType] || iconSvgMap.now,
+    isCurrent: vo.isCurrent === 1,
+  }))
+})
+
+onMounted(() => {
+  blogStore.fetchGrowthTimeline()
+})
 </script>
 
 <style scoped>

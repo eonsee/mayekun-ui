@@ -87,7 +87,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch, onMounted } from 'vue'
 import { Search, FileQuestion, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-vue-next'
 import { useBlogStore } from '@/store'
 import ArticleCard from '@/components/article/ArticleCard.vue'
@@ -97,6 +97,11 @@ import SeasonTree from '@/components/article/SeasonTree.vue'
 const blogStore = useBlogStore()
 const currentPage = ref(1)
 const pageSize = 8
+
+// 组件加载时从后端拉取文章
+onMounted(() => {
+  blogStore.fetchArticles()
+})
 
 const categories = computed(() => blogStore.allCategories)
 const currentCategory = computed(() => blogStore.currentCategory)

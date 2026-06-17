@@ -217,7 +217,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { BookOpen, User, ArrowRight, ChevronDown, ChevronRight, ChevronLeft, FileText, FolderOpen, Calendar, ExternalLink, Github, Lock, Monitor } from 'lucide-vue-next'
 import { useBlogStore } from '@/store'
 import ArticleCard from '@/components/article/ArticleCard.vue'
@@ -226,6 +226,11 @@ import StatsChart from '@/components/home/StatsChart.vue'
 import type { Work } from '@/types'
 
 const blogStore = useBlogStore()
+
+// 首页加载时拉取文章
+onMounted(() => {
+  blogStore.fetchArticles()
+})
 
 const profile = computed(() => blogStore.profileData)
 const articles = computed(() => blogStore.allArticles)

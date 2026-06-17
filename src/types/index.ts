@@ -38,6 +38,8 @@ export interface Profile {
     twitter?: string
     linkedin?: string
     weibo?: string
+    gitee?: string
+    juejin?: string
   }
   skills: {
     name: string
