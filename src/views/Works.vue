@@ -64,6 +64,19 @@
         </div>
       </section>
 
+      <!-- Category Filter -->
+      <div class="category-filter">
+        <button
+          v-for="category in categories"
+          :key="category.id"
+          class="category-tab"
+          :class="{ active: currentWorkCategory === category.name }"
+          @click="setWorkCategory(category.name)"
+        >
+          {{ category.name }}
+        </button>
+      </div>
+
       <!-- Works Grid -->
       <div class="works-grid">
         <WorkCard
@@ -85,6 +98,8 @@ import WorkCard from '@/components/work/WorkCard.vue'
 
 const blogStore = useBlogStore()
 const works = computed(() => blogStore.filteredWorks)
+const categories = computed(() => blogStore.workCategories)
+const currentWorkCategory = computed(() => blogStore.currentWorkCategory)
 const activeNode = ref(-1)
 
 interface TimelineItem {
@@ -136,9 +151,15 @@ const timeline = computed<TimelineItem[]>(() => {
   }))
 })
 
-onMounted(() => {
+onMounted(async () => {
+  await blogStore.fetchCategories(2)
   blogStore.fetchGrowthTimeline()
+  blogStore.fetchWorks()
 })
+
+const setWorkCategory = (category: string) => {
+  blogStore.setWorkCategory(category)
+}
 </script>
 
 <style scoped>
@@ -149,7 +170,7 @@ onMounted(() => {
 
 /* Timeline Section */
 .timeline-section {
-  margin-bottom: 64px;
+  margin-bottom: 32px;
 }
 
 .timeline-header {
@@ -329,6 +350,34 @@ onMounted(() => {
   font-size: 0.625rem;
   font-weight: 600;
   white-space: nowrap;
+}
+
+/* Category Filter */
+.category-filter {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 32px;
+}
+
+.category-tab {
+  padding: 8px 20px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-full);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  transition: all var(--transition-fast);
+}
+
+.category-tab:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.category-tab.active {
+  background: var(--primary-gradient);
+  color: white;
 }
 
 /* Works Grid */

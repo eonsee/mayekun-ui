@@ -267,20 +267,24 @@ CREATE TABLE `b_activity` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='热力图活动记录表';
 
 -- =============================================
--- 13. 阅读记录表
+-- 13. 阅读记录表（通用，支持文章和作品）
 -- =============================================
 CREATE TABLE `b_view_log` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
   `targeb_type` tinyint(1) NOT NULL COMMENT '目标类型 1:文章 2:作品',
-  `targeb_id` bigint(20) NOT NULL COMMENT '目标ID',
+  `targeb_id` bigint NOT NULL COMMENT '目标ID',
+  `user_id` bigint DEFAULT NULL COMMENT '用户ID（未登录为空）',
   `ip` varchar(50) DEFAULT NULL COMMENT '访问IP',
   `user_agent` varchar(500) DEFAULT NULL COMMENT '用户代理',
   `referer` varchar(500) DEFAULT NULL COMMENT '来源页面',
+  `view_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '访问时间',
   `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`),
   KEY `idx_target` (`targeb_type`, `targeb_id`),
-  KEY `idx_create_time` (`create_time`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='阅读记录表';
+  KEY `idx_view_time` (`view_time`),
+  KEY `idx_target_ip` (`targeb_type`, `targeb_id`, `ip`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='阅读记录表';
 
 -- =============================================
 -- 14. 评论表
@@ -308,7 +312,7 @@ CREATE TABLE `b_comment` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='评论表';
 
 -- =============================================
--- 15. 友情链接表
+-- 16. 友情链接表
 -- =============================================
 CREATE TABLE `b_friend_link` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
@@ -326,7 +330,7 @@ CREATE TABLE `b_friend_link` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='友情链接表';
 
 -- =============================================
--- 16. 系统配置表
+-- 17. 系统配置表
 -- =============================================
 CREATE TABLE `b_config` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
@@ -342,7 +346,7 @@ CREATE TABLE `b_config` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='系统配置表';
 
 -- =============================================
--- 17. 用户表(后台管理)
+-- 18. 用户表(后台管理)
 -- =============================================
 CREATE TABLE `b_user` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',

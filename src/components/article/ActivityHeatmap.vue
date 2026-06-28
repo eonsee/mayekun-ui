@@ -141,12 +141,8 @@ const activityData = computed<ActivityDay[]>(() => {
   // 构建后端数据的 Map，方便查找
   const heatMapMap = new Map<string, number>()
   blogStore.heatMapData.forEach((item) => {
-    // 后端 LocalDate 序列化为 "yyyy-MM-dd"，直接使用
-    console.log('[Heatmap] 后端数据项:', item, 'date类型:', typeof item.date)
     heatMapMap.set(item.date, item.count)
   })
-  console.log('[Heatmap] heatMapMap:', [...heatMapMap.entries()])
-  console.log('[Heatmap] store.heatMapData 长度:', blogStore.heatMapData.length)
 
   for (let i = 364; i >= 0; i--) {
     const date = new Date(today)
@@ -280,8 +276,9 @@ onMounted(() => {
 .heatmap-grid {
   flex: 1;
   display: grid;
-  grid-template-columns: repeat(53, 1fr);
   grid-template-rows: repeat(7, 1fr);
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
   gap: 2px;
 }
 

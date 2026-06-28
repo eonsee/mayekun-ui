@@ -38,6 +38,26 @@
               Email
             </a>
           </div>
+
+          <!-- 微信二维码（需要时取消注释）
+          <div class="footer-column">
+            <h4 class="footer-title">微信</h4>
+            <div class="footer-qr">
+              <img src="/qr-wechat.png" alt="微信二维码" class="qr-image" />
+              <span class="qr-label">扫码添加微信</span>
+            </div>
+          </div>
+          -->
+
+          <!-- QQ二维码（需要时取消注释）
+          <div class="footer-column">
+            <h4 class="footer-title">QQ</h4>
+            <div class="footer-qr">
+              <img src="/qr-qq.png" alt="QQ二维码" class="qr-image" />
+              <span class="qr-label">扫码添加QQ</span>
+            </div>
+          </div>
+          -->
         </div>
       </div>
 
@@ -133,6 +153,26 @@ const currentYear = computed(() => new Date().getFullYear())
 
 .footer-link:hover {
   color: var(--primary-color);
+}
+
+.footer-qr {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.qr-image {
+  width: 96px;
+  height: 96px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  object-fit: cover;
+}
+
+.qr-label {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
 }
 
 .footer-bottom {

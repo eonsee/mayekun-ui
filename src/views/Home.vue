@@ -64,7 +64,7 @@
     </section>
 
     <!-- Works Section -->
-    <section class="works-section">
+    <section class="works-section" :style="worksSectionStyle">
       <div class="container">
         <div class="section-header">
           <h2 class="section-title">作品展示</h2>
@@ -217,7 +217,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { BookOpen, User, ArrowRight, ChevronDown, ChevronRight, ChevronLeft, FileText, FolderOpen, Calendar, ExternalLink, Github, Lock, Monitor } from 'lucide-vue-next'
 import { useBlogStore } from '@/store'
 import ArticleCard from '@/components/article/ArticleCard.vue'
@@ -227,9 +227,11 @@ import type { Work } from '@/types'
 
 const blogStore = useBlogStore()
 
-// 首页加载时拉取文章
-onMounted(() => {
+// 首页加载时先拉分类，再拉文章和作品
+onMounted(async () => {
+  await Promise.all([blogStore.fetchCategories(1), blogStore.fetchCategories(2)])
   blogStore.fetchArticles()
+  blogStore.fetchWorks()
 })
 
 const profile = computed(() => blogStore.profileData)
@@ -257,9 +259,102 @@ const galleryNext = () => {
 }
 
 // 切换作品时重置
-import { watch } from 'vue'
 watch(selectedWork, () => {
   galleryIndex.value = 0
+})
+
+// ============ 作品封面主色提取（可关闭：设为 false 即可） ============
+const DOMINANT_COLOR_ENABLED = false
+
+const dominantColor = ref('')
+
+// 从图片提取主色（通过 fetch blob 绕过 CORS）
+async function extractDominantColor(imageUrl: string): Promise<string> {
+  if (!imageUrl) return ''
+  try {
+    const resp = await fetch(imageUrl, { mode: 'cors' })
+    const blob = await resp.blob()
+    const blobUrl = URL.createObjectURL(blob)
+    const result = await new Promise<string>((resolve) => {
+      const img = new Image()
+      img.onload = () => {
+        try {
+          const canvas = document.createElement('canvas')
+          const ctx = canvas.getContext('2d')
+          if (!ctx) { resolve(''); return }
+          const size = 50
+          canvas.width = size
+          canvas.height = size
+          ctx.drawImage(img, 0, 0, size, size)
+          const data = ctx.getImageData(0, 0, size, size).data
+          let r = 0, g = 0, b = 0, count = 0
+          for (let i = 0; i < data.length; i += 4) {
+            const pr = data[i], pg = data[i + 1], pb = data[i + 2], pa = data[i + 3]
+            if (pa < 128) continue
+            const brightness = (pr + pg + pb) / 3
+            if (brightness < 30 || brightness > 225) continue
+            r += pr; g += pg; b += pb; count++
+          }
+          if (count === 0) { resolve(''); return }
+          resolve(`${Math.round(r / count)}, ${Math.round(g / count)}, ${Math.round(b / count)}`)
+        } catch {
+          resolve('')
+        }
+      }
+      img.onerror = () => resolve('')
+      img.src = blobUrl
+    })
+    URL.revokeObjectURL(blobUrl)
+    return result
+  } catch {
+    // CORS 失败时，尝试直接加载（同源图片）
+    return new Promise((resolve) => {
+      const img = new Image()
+      img.onload = () => {
+        try {
+          const canvas = document.createElement('canvas')
+          const ctx = canvas.getContext('2d')
+          if (!ctx) { resolve(''); return }
+          const size = 50
+          canvas.width = size
+          canvas.height = size
+          ctx.drawImage(img, 0, 0, size, size)
+          const data = ctx.getImageData(0, 0, size, size).data
+          let r = 0, g = 0, b = 0, count = 0
+          for (let i = 0; i < data.length; i += 4) {
+            const pr = data[i], pg = data[i + 1], pb = data[i + 2], pa = data[i + 3]
+            if (pa < 128) continue
+            const brightness = (pr + pg + pb) / 3
+            if (brightness < 30 || brightness > 225) continue
+            r += pr; g += pg; b += pb; count++
+          }
+          if (count === 0) { resolve(''); return }
+          resolve(`${Math.round(r / count)}, ${Math.round(g / count)}, ${Math.round(b / count)}`)
+        } catch {
+          resolve('')
+        }
+      }
+      img.onerror = () => resolve('')
+      img.src = imageUrl
+    })
+  }
+}
+
+// 切换作品时提取主色
+watch(selectedWork, async (work) => {
+  if (!DOMINANT_COLOR_ENABLED || !work?.cover) {
+    dominantColor.value = ''
+    return
+  }
+  dominantColor.value = await extractDominantColor(work.cover)
+}, { immediate: true })
+
+// 作品展示区域背景样式
+const worksSectionStyle = computed(() => {
+  if (!DOMINANT_COLOR_ENABLED || !dominantColor.value) return {}
+  return {
+    background: `linear-gradient(135deg, rgba(${dominantColor.value}, 0.08) 0%, rgba(${dominantColor.value}, 0.03) 50%, var(--bg-secondary) 100%)`,
+  }
 })
 
 const getParticleStyle = (index: number) => {

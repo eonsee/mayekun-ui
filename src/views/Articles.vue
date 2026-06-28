@@ -98,13 +98,14 @@ const blogStore = useBlogStore()
 const currentPage = ref(1)
 const pageSize = 8
 
-// 组件加载时从后端拉取文章
-onMounted(() => {
+// 组件加载时先拉分类，再拉文章（分类映射需要先就绪）
+onMounted(async () => {
+  await blogStore.fetchCategories(1)
   blogStore.fetchArticles()
 })
 
-const categories = computed(() => blogStore.allCategories)
-const currentCategory = computed(() => blogStore.currentCategory)
+const categories = computed(() => blogStore.articleCategories)
+const currentCategory = computed(() => blogStore.currentArticleCategory)
 const searchQuery = computed({
   get: () => blogStore.searchQuery,
   set: (value) => blogStore.setSearchQuery(value)

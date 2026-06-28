@@ -28,12 +28,34 @@ export interface PageParam {
 }
 
 const request: AxiosInstance = axios.create({
-  baseURL: '',
+  baseURL: import.meta.env.VITE_API_BASE_URL || '',
   timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
   },
 })
+
+// 后端服务地址（开发环境走 Vite 代理不需要，生产环境走 api.mayekun.com）
+export const API_BASE_URL = import.meta.env.DEV
+  ? ''
+  : 'https://api.mayekun.com'
+
+// 将相对路径的 URL 转为可访问的地址
+// 开发环境：保持相对路径走 Vite 代理
+// 生产环境：相对路径拼接 api.mayekun.com 域名
+// 已经是完整 URL 的（http/https）直接返回
+export function resolveUrl(url: string | undefined | null): string {
+  if (!url) return ''
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('//')) return url
+  // 生产环境：拼接 api.mayekun.com 域名
+  if (!import.meta.env.DEV && import.meta.env.VITE_UPLOAD_URL) {
+    const base = import.meta.env.VITE_UPLOAD_URL as string
+    const path = url.startsWith('/') ? url : '/' + url
+    return base + path
+  }
+  // 开发环境：保持相对路径走 Vite 代理
+  return url.startsWith('/') ? url : '/' + url
+}
 
 // 请求拦截器
 request.interceptors.request.use(
