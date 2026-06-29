@@ -18,6 +18,50 @@ function getDefaultSeason(): 'spring' | 'summer' | 'autumn' | 'winter' {
   return 'winter'
 }
 
+// 二十四节气配置
+export const SOLAR_TERMS = [
+  { key: 'lichun',     name: '立春',  month: 2,  day: 4,  color: '#86efac', desc: '东风解冻，蛰虫始振' },
+  { key: 'yushui',     name: '雨水',  month: 2,  day: 19, color: '#6ee7b7', desc: '草木萌动，鸿雁来' },
+  { key: 'jingzhe',    name: '惊蛰',  month: 3,  day: 6,  color: '#5eead4', desc: '春雷响，万物长' },
+  { key: 'chunfen',    name: '春分',  month: 3,  day: 21, color: '#2dd4bf', desc: '昼夜均，燕归来' },
+  { key: 'qingming',   name: '清明',  month: 4,  day: 5,  color: '#34d399', desc: '桐始华，虹始见' },
+  { key: 'guyu',       name: '谷雨',  month: 4,  day: 20, color: '#22c55e', desc: '雨生百谷，萍始生' },
+  { key: 'lixia',      name: '立夏',  month: 5,  day: 6,  color: '#67e8f9', desc: '蝼蝈鸣，蚯蚓出' },
+  { key: 'xiaoman',    name: '小满',  month: 5,  day: 21, color: '#22d3ee', desc: '麦穗初齐，苦菜秀' },
+  { key: 'mangzhong',  name: '芒种',  month: 6,  day: 6,  color: '#06b6d4', desc: '螳螂生，鵙始鸣' },
+  { key: 'xiazhi',     name: '夏至',  month: 6,  day: 21, color: '#0891b2', desc: '日最长，蝉始鸣' },
+  { key: 'xiaoshu',    name: '小暑',  month: 7,  day: 7,  color: '#fcd34d', desc: '温风至，蟋蟀居壁' },
+  { key: 'dashu',      name: '大暑',  month: 7,  day: 23, color: '#f59e0b', desc: '大雨时行，腐草为萤' },
+  { key: 'liqiu',      name: '立秋',  month: 8,  day: 7,  color: '#fdba74', desc: '凉风至，白露降' },
+  { key: 'chushu',     name: '处暑',  month: 8,  day: 23, color: '#fb923c', desc: '暑气渐消，鹰乃祭鸟' },
+  { key: 'bailu',      name: '白露',  month: 9,  day: 8,  color: '#f97316', desc: '露凝而白，鸿雁来宾' },
+  { key: 'qiufen',     name: '秋分',  month: 9,  day: 23, color: '#ea580c', desc: '雷始收声，水始涸' },
+  { key: 'hanlu',      name: '寒露',  month: 10, day: 8,  color: '#c2410c', desc: '鸿雁来宾，菊有黄华' },
+  { key: 'shuangjiang',name: '霜降',  month: 10, day: 23, color: '#9a3412', desc: '霜始降，蛰虫咸俯' },
+  { key: 'lidong',     name: '立冬',  month: 11, day: 7,  color: '#a5b4fc', desc: '水始冰，地始冻' },
+  { key: 'xiaoxue',    name: '小雪',  month: 11, day: 22, color: '#818cf8', desc: '虹藏不见，天气上升' },
+  { key: 'daxue',      name: '大雪',  month: 12, day: 7,  color: '#6366f1', desc: '鹖鴠不鸣，虎始交' },
+  { key: 'dongzhi',    name: '冬至',  month: 12, day: 22, color: '#4f46e5', desc: '日最短，蚯蚓结' },
+  { key: 'xiaohan',    name: '小寒',  month: 1,  day: 6,  color: '#93c5fd', desc: '雁北乡，鹊始巢' },
+  { key: 'dahan',      name: '大寒',  month: 1,  day: 20, color: '#3b82f6', desc: '坚冰深厚，寒至极' },
+] as const
+
+export type SolarTermKey = typeof SOLAR_TERMS[number]['key']
+export type HeatmapMode = 'season' | 'solar'
+
+function getDefaultSolarTerm(): SolarTermKey {
+  const now = new Date()
+  const month = now.getMonth() + 1
+  const day = now.getDate()
+  let current: SolarTermKey = 'dongzhi'
+  for (const st of SOLAR_TERMS) {
+    if (month > st.month || (month === st.month && day >= st.day)) {
+      current = st.key
+    }
+  }
+  return current
+}
+
 // 后端 VO 转前端 Article 类型（通过 categoryId 映射分类名称）
 function voToArticle(vo: ArticleVO, categoryMap: Map<number, string>): Article {
   return {
@@ -110,6 +154,8 @@ export const useBlogStore = defineStore('blog', () => {
   const currentArticleCategory = ref<string>('全部')
   const currentWorkCategory = ref<string>('全部')
   const searchQuery = ref<string>('')
+  const heatmapMode = ref<HeatmapMode>('season')
+  const currentSolarTerm = ref<SolarTermKey>(getDefaultSolarTerm())
   const currentSeason = ref<'spring' | 'summer' | 'autumn' | 'winter'>(getDefaultSeason())
   const articleLoading = ref(false)
   const heatMapData = ref<HeatMapVO[]>([])
@@ -350,6 +396,8 @@ export const useBlogStore = defineStore('blog', () => {
     currentWorkCategory,
     searchQuery,
     currentSeason,
+    heatmapMode,
+    currentSolarTerm,
     articleLoading,
     heatMapData,
     heatMapLoading,

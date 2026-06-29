@@ -35,25 +35,25 @@ const request: AxiosInstance = axios.create({
   },
 })
 
-// 后端服务地址（开发环境走 Vite 代理不需要，生产环境走 api.mayekun.com）
-export const API_BASE_URL = import.meta.env.DEV
-  ? ''
-  : 'https://api.mayekun.com'
+// 后端服务地址（开发/生产环境均走代理，不需要直连）
+export const API_BASE_URL = ''
 
-// 将相对路径的 URL 转为可访问的地址
-// 开发环境：保持相对路径走 Vite 代理
-// 生产环境：相对路径拼接 api.mayekun.com 域名
-// 已经是完整 URL 的（http/https）直接返回
+// 将 URL 转为可访问的相对路径（走同域代理，避免直连 api.mayekun.com）
+// 后端可能返回完整 URL 如 http://api.mayekun.com/admin/upload/xxx.jpg
+// 需要转为相对路径 /admin/upload/xxx.jpg，走 Vite 代理（开发）或 Nginx 代理（生产）
 export function resolveUrl(url: string | undefined | null): string {
   if (!url) return ''
-  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('//')) return url
-  // 生产环境：拼接 api.mayekun.com 域名
-  if (!import.meta.env.DEV && import.meta.env.VITE_UPLOAD_URL) {
-    const base = import.meta.env.VITE_UPLOAD_URL as string
-    const path = url.startsWith('/') ? url : '/' + url
-    return base + path
+  // 剥离 api.mayekun.com 域名前缀，转为相对路径
+  if (url.startsWith('http://api.mayekun.com') || url.startsWith('https://api.mayekun.com')) {
+    try {
+      const u = new URL(url)
+      return u.pathname
+    } catch {
+      return url
+    }
   }
-  // 开发环境：保持相对路径走 Vite 代理
+  // 其他完整 URL（非 api.mayekun.com）直接返回
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('//')) return url
   return url.startsWith('/') ? url : '/' + url
 }
 
